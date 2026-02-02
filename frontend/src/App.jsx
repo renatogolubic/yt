@@ -17,20 +17,42 @@ const formatPercent = (value) => `${Math.round(value * 100)}%`;
 export default function App() {
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:4000/api/videos")
-      .then((res) => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error ?? "Failed to load videos.");
+        }
+        return data;
+      })
       .then((data) => {
+        setError("");
         setVideos(data.videos ?? []);
         if (data.videos?.length) {
           setSelected(data.videos[0]);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        setError(err.message);
         setVideos([]);
       });
   }, []);
+
+  const handleConnect = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/auth/url");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to start OAuth.");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="app">
@@ -42,7 +64,9 @@ export default function App() {
             Track 0–72 hour performance using rule-based checkpoints and measurable trends.
           </p>
         </div>
-        <button className="button">Connect YouTube</button>
+        <button className="button" onClick={handleConnect}>
+          Connect YouTube
+        </button>
       </header>
 
       <main className="main">
@@ -69,6 +93,7 @@ export default function App() {
         </section>
 
         <section className="panel detail">
+          {error ? <div className="empty">{error}</div> : null}
           {selected ? (
             <>
               <div className="detail-header">

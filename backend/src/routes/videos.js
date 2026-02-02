@@ -1,10 +1,16 @@
 import express from "express";
 import { getDb } from "../db.js";
 import { evaluateVideoChecklist } from "../checklist.js";
+import { loadTokens } from "../authStore.js";
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens?.accessToken) {
+    res.status(401).json({ error: "Not authenticated with YouTube yet." });
+    return;
+  }
   const db = await getDb();
   const videos = db.all(
     `SELECT v.*, COUNT(s.id) as snapshot_count
@@ -32,6 +38,11 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens?.accessToken) {
+    res.status(401).json({ error: "Not authenticated with YouTube yet." });
+    return;
+  }
   const db = await getDb();
   const video = db.get("SELECT * FROM videos WHERE id = ?", [req.params.id]);
   if (!video) {

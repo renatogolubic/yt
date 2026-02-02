@@ -5,6 +5,7 @@ export const config = {
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || "",
   sessionSecret: process.env.SESSION_SECRET || "",
+  frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
   port: process.env.PORT || 4000
 };
 

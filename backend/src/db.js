@@ -40,6 +40,13 @@ const bootstrapSchema = (db) => {
       likes_per_view REAL NOT NULL,
       comments_per_view REAL NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS oauth_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT,
+      expires_at INTEGER
+    );
   `);
 };
 
