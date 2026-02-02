@@ -18,6 +18,7 @@ export default function App() {
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
+  const [authMissing, setAuthMissing] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:4000/api/videos")
@@ -30,6 +31,7 @@ export default function App() {
       })
       .then((data) => {
         setError("");
+        setAuthMissing([]);
         setVideos(data.videos ?? []);
         if (data.videos?.length) {
           setSelected(data.videos[0]);
@@ -37,6 +39,7 @@ export default function App() {
       })
       .catch((err) => {
         setError(err.message);
+        setAuthMissing([]);
         setVideos([]);
       });
   }, []);
@@ -46,8 +49,10 @@ export default function App() {
       const response = await fetch("http://localhost:4000/api/auth/url");
       const data = await response.json();
       if (!response.ok) {
+        setAuthMissing(data.missing ?? []);
         throw new Error(data.error ?? "Failed to start OAuth.");
       }
+      setAuthMissing([]);
       window.location.href = data.url;
     } catch (err) {
       setError(err.message);
@@ -93,7 +98,14 @@ export default function App() {
         </section>
 
         <section className="panel detail">
-          {error ? <div className="empty">{error}</div> : null}
+          {error ? (
+            <div className="empty">
+              <p>{error}</p>
+              {authMissing.length ? (
+                <p>Missing: {authMissing.join(", ")}.</p>
+              ) : null}
+            </div>
+          ) : null}
           {selected ? (
             <>
               <div className="detail-header">
