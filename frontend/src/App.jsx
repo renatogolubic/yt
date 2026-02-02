@@ -20,7 +20,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [authMissing, setAuthMissing] = useState([]);
 
-  useEffect(() => {
+  const loadVideos = () => {
     fetch("http://localhost:4000/api/videos")
       .then(async (res) => {
         const data = await res.json();
@@ -42,6 +42,23 @@ export default function App() {
         setAuthMissing([]);
         setVideos([]);
       });
+  };
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authStatus = params.get("auth");
+    if (authStatus === "success") {
+      loadVideos();
+      params.delete("auth");
+      const nextUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", nextUrl);
+    }
   }, []);
 
   const handleConnect = async () => {

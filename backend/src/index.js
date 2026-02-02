@@ -57,6 +57,10 @@ app.get("/api/auth/callback", async (req, res) => {
       expiresAt
     });
 
+    fetchMetricsJob().catch((fetchError) => {
+      console.error("Initial metrics fetch failed:", fetchError);
+    });
+
     return res.redirect(`${config.frontendUrl}/?auth=success`);
   } catch (authError) {
     console.error(authError);
