@@ -14,6 +14,13 @@ const formatHours = (dateString) => {
 
 const formatPercent = (value) => `${Math.round(value * 100)}%`;
 
+const formatNumber = (value) => {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return new Intl.NumberFormat("en-US").format(Math.round(value));
+};
+
 export default function App() {
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -134,6 +141,54 @@ export default function App() {
                 </div>
                 <div className={statusClass(selected.checklist?.status)}>
                   {selected.checklist?.status ?? "Alive"}
+                </div>
+              </div>
+
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <p className="stat-label">Views</p>
+                  <p className="stat-value">{formatNumber(selected.latestSnapshot?.views)}</p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Likes</p>
+                  <p className="stat-value">{formatNumber(selected.latestSnapshot?.likes)}</p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Comments</p>
+                  <p className="stat-value">{formatNumber(selected.latestSnapshot?.comments)}</p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Shares</p>
+                  <p className="stat-value">—</p>
+                  <p className="stat-note">Not available via API.</p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Views / hour</p>
+                  <p className="stat-value">
+                    {formatNumber(selected.latestSnapshot?.views_per_hour)}
+                  </p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Avg % viewed</p>
+                  <p className="stat-value">
+                    {selected.latestSnapshot?.avg_percentage_viewed
+                      ? formatPercent(selected.latestSnapshot?.avg_percentage_viewed)
+                      : "—"}
+                  </p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Shorts feed views</p>
+                  <p className="stat-value">
+                    {formatNumber(selected.latestSnapshot?.views_from_shorts)}
+                  </p>
+                </div>
+                <div className="stat-card">
+                  <p className="stat-label">Avg view duration</p>
+                  <p className="stat-value">
+                    {selected.latestSnapshot?.avg_view_duration_seconds
+                      ? `${formatNumber(selected.latestSnapshot?.avg_view_duration_seconds)}s`
+                      : "—"}
+                  </p>
                 </div>
               </div>
 

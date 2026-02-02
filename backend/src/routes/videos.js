@@ -26,11 +26,19 @@ router.get("/", async (req, res) => {
        ORDER BY captured_at ASC`,
       [video.id]
     );
+    const latestSnapshot = db.get(
+      `SELECT * FROM video_snapshots
+       WHERE video_id = ?
+       ORDER BY captured_at DESC
+       LIMIT 1`,
+      [video.id]
+    );
     const checklist = evaluateVideoChecklist(snapshots, video.published_at);
 
     return {
       ...video,
-      checklist
+      checklist,
+      latestSnapshot
     };
   });
 
