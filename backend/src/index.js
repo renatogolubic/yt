@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import videosRouter from "./routes/videos.js";
 import { fetchMetricsJob } from "./jobs/fetchMetrics.js";
@@ -5,6 +6,11 @@ import { getMissingOAuthEnv, config } from "./config.js";
 import { oauthScopes, getAuthUrl } from "./youtubeClient.js";
 
 const app = express();
+app.use(
+  cors({
+    origin: "http://localhost:5173"
+  })
+);
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
