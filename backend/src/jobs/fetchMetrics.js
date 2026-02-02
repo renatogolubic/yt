@@ -1,6 +1,6 @@
 import { getDb } from "../db.js";
 import { loadTokens, saveTokens } from "../authStore.js";
-import { fetchUploads, fetchVideoMetricsMap } from "../youtubeClient.js";
+import { fetchAnalyticsMetricsMap, fetchUploads, fetchVideoMetricsMap } from "../youtubeClient.js";
 import { config } from "../config.js";
 
 const refreshAccessToken = async (refreshToken) => {
@@ -56,15 +56,26 @@ export const fetchMetricsJob = async () => {
       tokens.accessToken,
       videos.map((video) => video.id)
     );
+    const analyticsMap = await fetchAnalyticsMetricsMap(
+      tokens.accessToken,
+      channel.id,
+      videos
+    );
 
     for (const video of videos) {
-      const metrics = metricsMap.get(video.id) ?? {
+      const baseMetrics = metricsMap.get(video.id) ?? {
         views: 0,
         likes: 0,
-        comments: 0,
+        comments: 0
+      };
+      const analyticsMetrics = analyticsMap.get(video.id) ?? {
         avgViewDurationSeconds: 0,
         avgPercentageViewed: 0,
         viewsFromShorts: 0
+      };
+      const metrics = {
+        ...baseMetrics,
+        ...analyticsMetrics
       };
       const hoursSincePublish = video.publishedAt
         ? Math.max(

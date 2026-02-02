@@ -7,6 +7,7 @@ export const oauthScopes = [
 
 const youtubeBaseUrl = "https://www.googleapis.com/youtube/v3";
 const oauthTokenUrl = "https://oauth2.googleapis.com/token";
+const analyticsBaseUrl = "https://youtubeanalytics.googleapis.com/v2/reports";
 
 export const getAuthUrl = () => {
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -68,6 +69,28 @@ const youtubeRequest = async (accessToken, endpoint, params) => {
   return response.json();
 };
 
+const analyticsRequest = async (accessToken, params) => {
+  const url = new URL(analyticsBaseUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`YouTube Analytics API error: ${errorText}`);
+  }
+
+  return response.json();
+};
+
 const parseDurationSeconds = (isoDuration) => {
   if (!isoDuration) return 0;
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -76,6 +99,50 @@ const parseDurationSeconds = (isoDuration) => {
   const minutes = Number(match[2] || 0);
   const seconds = Number(match[3] || 0);
   return hours * 3600 + minutes * 60 + seconds;
+};
+
+const toDateString = (value) => {
+  if (!value) {
+    return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  }
+  return new Date(value).toISOString().slice(0, 10);
+};
+
+const fetchVideoAnalytics = async (accessToken, channelId, video) => {
+  const startDate = toDateString(video.publishedAt);
+  const endDate = new Date().toISOString().slice(0, 10);
+
+  const summary = await analyticsRequest(accessToken, {
+    ids: `channel==${channelId}`,
+    startDate,
+    endDate,
+    metrics: "views,averageViewDuration,averageViewPercentage",
+    filters: `video==${video.id}`
+  });
+
+  const row = summary.rows?.[0] ?? [0, 0, 0];
+  const [views, avgViewDurationSeconds, avgPercentageViewed] = row;
+
+  const traffic = await analyticsRequest(accessToken, {
+    ids: `channel==${channelId}`,
+    startDate,
+    endDate,
+    metrics: "views",
+    dimensions: "insightTrafficSourceType",
+    filters: `video==${video.id}`
+  });
+
+  const shortsViews = (traffic.rows ?? []).reduce((total, [source, sourceViews]) => {
+    const isShorts = typeof source === "string" && source.toLowerCase().includes("shorts");
+    return total + (isShorts ? Number(sourceViews ?? 0) : 0);
+  }, 0);
+
+  return {
+    views: Number(views ?? 0),
+    avgViewDurationSeconds: Number(avgViewDurationSeconds ?? 0),
+    avgPercentageViewed: Number(avgPercentageViewed ?? 0),
+    viewsFromShorts: Number(shortsViews ?? 0)
+  };
 };
 
 export const fetchChannel = async (accessToken) => {
@@ -181,4 +248,20 @@ export const fetchVideoMetricsMap = async (accessToken, videoIds) => {
   }
 
   return metrics;
+};
+
+export const fetchAnalyticsMetricsMap = async (accessToken, channelId, videos, limit = 50) => {
+  const analyticsMetrics = new Map();
+  const targets = videos.filter((video) => video.isShort).slice(0, limit);
+
+  for (const video of targets) {
+    try {
+      const metrics = await fetchVideoAnalytics(accessToken, channelId, video);
+      analyticsMetrics.set(video.id, metrics);
+    } catch (error) {
+      console.warn(`Analytics fetch failed for ${video.id}:`, error.message);
+    }
+  }
+
+  return analyticsMetrics;
 };
