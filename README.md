@@ -5,8 +5,8 @@ A two-tier web application that connects to YouTube Analytics + Data APIs and ev
 ## Architecture
 
 - **Frontend**: React (Vite) dashboard for video list + checklist detail
-- **Backend**: Node + Express API with cron job for metrics snapshots
-- **Database**: SQLite (replace with Postgres/MySQL in production)
+- **Backend**: Node + Express API with scheduled metrics snapshots
+- **Database**: SQLite via `sql.js` (replace with Postgres/MySQL in production)
 
 ## What the app does
 
