@@ -42,6 +42,20 @@ npm run dev
 
 The backend runs on `http://localhost:4000`, the frontend on `http://localhost:5173`.
 
+### Configure OAuth environment variables
+
+Copy the example file and fill in your Google OAuth credentials:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Required values:
+
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: from Google Cloud Console → APIs & Services → Credentials → OAuth Client ID.
+- `GOOGLE_REDIRECT_URI`: must match an authorized redirect URI (example: `http://localhost:4000/api/auth/callback`).
+
 ## Next steps
 
 - Swap `youtubeClient.js` stubs with real OAuth + API calls.

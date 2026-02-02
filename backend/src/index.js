@@ -1,6 +1,7 @@
 import express from "express";
 import videosRouter from "./routes/videos.js";
 import { fetchMetricsJob } from "./jobs/fetchMetrics.js";
+import { getMissingOAuthEnv, config } from "./config.js";
 import { oauthScopes, getAuthUrl } from "./youtubeClient.js";
 
 const app = express();
@@ -11,6 +12,15 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/auth/url", (req, res) => {
+  const missing = getMissingOAuthEnv();
+
+  if (missing.length > 0) {
+    return res.status(500).json({
+      error: "Missing required OAuth environment variables.",
+      missing
+    });
+  }
+
   res.json({
     url: getAuthUrl(),
     scopes: oauthScopes
@@ -25,7 +35,6 @@ setInterval(() => {
   fetchMetricsJob();
 }, scheduleMs);
 
-const port = process.env.PORT || 4000;
-app.listen(port, () => {
-  console.log(`Backend listening on ${port}`);
+app.listen(config.port, () => {
+  console.log(`Backend listening on ${config.port}`);
 });

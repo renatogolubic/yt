@@ -1,10 +1,21 @@
+import { config } from "./config.js";
+
 export const oauthScopes = [
   "https://www.googleapis.com/auth/youtube.readonly",
   "https://www.googleapis.com/auth/yt-analytics.readonly"
 ];
 
 export const getAuthUrl = () => {
-  return "https://accounts.google.com/o/oauth2/v2/auth";
+  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+
+  url.searchParams.set("client_id", config.googleClientId);
+  url.searchParams.set("redirect_uri", config.googleRedirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("access_type", "offline");
+  url.searchParams.set("prompt", "consent");
+  url.searchParams.set("scope", oauthScopes.join(" "));
+
+  return url.toString();
 };
 
 export const exchangeCodeForTokens = async () => {
