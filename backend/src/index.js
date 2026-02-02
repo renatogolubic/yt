@@ -1,5 +1,4 @@
 import express from "express";
-import cron from "node-cron";
 import videosRouter from "./routes/videos.js";
 import { fetchMetricsJob } from "./jobs/fetchMetrics.js";
 import { oauthScopes, getAuthUrl } from "./youtubeClient.js";
@@ -20,11 +19,11 @@ app.get("/api/auth/url", (req, res) => {
 
 app.use("/api/videos", videosRouter);
 
-cron.schedule("*/45 * * * *", () => {
-  fetchMetricsJob();
-});
-
+const scheduleMs = 45 * 60 * 1000;
 fetchMetricsJob();
+setInterval(() => {
+  fetchMetricsJob();
+}, scheduleMs);
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
